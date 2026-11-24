@@ -1,5 +1,5 @@
 window.SCWORK_ADMIN_CONFIG = {
-  supabaseUrl: "https://YOUR_PROJECT_REF.supabase.co",
-  supabasePublishableKey: "sb_publishable_YOUR_KEY",
+  supabaseUrl: "https://krvkjnwoocrnvgiueevx.supabase.co",
+  supabasePublishableKey: "sb_publishable_txsijHehFmrGA-aznXFOIw_XqP_naj_",
   environment: "production"
 };
