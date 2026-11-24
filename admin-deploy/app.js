@@ -36,16 +36,65 @@ $('loginForm').addEventListener('submit',async e=>{e.preventDefault();const btn=
  const {error}=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});
  if(error)throw error;$('password').value='';await initialize();
  }catch(err){msg('loginMsg',err.message||'เข้าสู่ระบบไม่สำเร็จ')}finally{btn.disabled=false;}});
-async function openMfa(){show('mfa');const {data,error}=await db.auth.mfa.listFactors();if(error){msg('mfaMsg',error.message);return;}
- const verified=(data?.totp||[]).find(f=>f.status==='verified');if(verified){activeFactor=verified.id;$('mfaEnroll').hidden=true;$('mfaExplanation').textContent='ป้อนรหัส 6 หลักจากแอป Authenticator';return;}
- const {data:enrollment,error:enrollErr}=await db.auth.mfa.enroll({factorType:'totp',friendlyName:'SCWork Pricing Admin'});
- if(enrollErr){msg('mfaMsg',enrollErr.message);return;}
- activeFactor=enrollment.id;$('mfaEnroll').hidden=false;$('mfaQr').src=enrollment.totp.qr_code;
- $('mfaExplanation').textContent='ลงทะเบียน Authenticator ด้วย QR ด้านล่าง แล้วกรอกรหัส 6 หลัก';}
-$('mfaForm').addEventListener('submit',async e=>{e.preventDefault();const code=$('mfaCode').value.trim();if(!/^\d{6}$/.test(code)||!activeFactor){msg('mfaMsg','กรอกรหัส 6 หลักให้ถูกต้อง');return;}
- try{const {data:challenge,error:ce}=await db.auth.mfa.challenge({factorId:activeFactor});if(ce)throw ce;
- const {error:ve}=await db.auth.mfa.verify({factorId:activeFactor,challengeId:challenge.id,code});if(ve)throw ve;
- $('mfaCode').value='';await initialize();}catch(err){msg('mfaMsg',err.message||'ยืนยันรหัสไม่สำเร็จ')}});
+// MFA setup is asynchronous; do not report a valid 6-digit code as malformed when
+// the actual problem is a missing factor ID or a failed Supabase request.
+async function openMfa(){
+ show('mfa');
+ activeFactor=null;
+ msg('mfaMsg','');
+ $('mfaEnroll').hidden=true;
+ $('mfaExplanation').textContent='กำลังตรวจสอบการตั้งค่า Authenticator...';
+ try {
+  const {data,error}=await db.auth.mfa.listFactors();
+  if(error)throw error;
+  const verified=(data?.totp||[]).find(f=>f.status==='verified');
+  if(verified){
+   activeFactor=verified.id;
+   $('mfaEnroll').hidden=true;
+   $('mfaExplanation').textContent='ป้อนรหัส 6 หลักจากแอป Authenticator';
+   return;
+  }
+  const {data:enrollment,error:enrollErr}=await db.auth.mfa.enroll({factorType:'totp',friendlyName:'SCWork Pricing Admin'});
+  if(enrollErr)throw enrollErr;
+  if(!enrollment?.id||!enrollment?.totp?.qr_code)throw new Error('ไม่ได้รับข้อมูลการลงทะเบียน Authenticator จาก Supabase');
+  activeFactor=enrollment.id;
+  $('mfaEnroll').hidden=false;
+  $('mfaQr').src=enrollment.totp.qr_code;
+  $('mfaExplanation').textContent='ลงทะเบียน Authenticator ด้วย QR ด้านล่าง แล้วกรอกรหัส 6 หลัก';
+ }catch(err){
+  $('mfaExplanation').textContent='ไม่สามารถเตรียมการยืนยันตัวตนได้';
+  msg('mfaMsg','เชื่อมต่อการตั้งค่า MFA ไม่สำเร็จ: '+(err?.message||'ไม่ทราบสาเหตุ')+' — กรุณาโหลดหน้าใหม่ แล้วเข้าสู่ระบบอีกครั้ง');
+ }
+}
+$('mfaForm').addEventListener('submit',async e=>{
+ e.preventDefault();
+ const input=$('mfaCode');
+ const code=input.value.trim();
+ if(!/^\d{6}$/.test(code)){
+  msg('mfaMsg','กรุณากรอกรหัสตัวเลข 6 หลักจากแอป Authenticator');
+  return;
+ }
+ if(!activeFactor){
+  msg('mfaMsg','ระบบยังไม่ได้รับ Factor ID จาก Supabase — กำลังเชื่อมต่อใหม่');
+  await openMfa();
+  if(activeFactor)msg('mfaMsg','การเชื่อมต่อพร้อมแล้ว กรุณากด “ยืนยันรหัส” อีกครั้งด้วยรหัสล่าสุด');
+  return;
+ }
+ const button=$('mfaForm').querySelector('button[type="submit"]');
+ button.disabled=true;
+ msg('mfaMsg','กำลังยืนยันรหัสกับ Supabase...');
+ try{
+  const {data:challenge,error:ce}=await db.auth.mfa.challenge({factorId:activeFactor});
+  if(ce)throw ce;
+  if(!challenge?.id)throw new Error('Supabase ไม่ส่ง Challenge ID กลับมา');
+  const {error:ve}=await db.auth.mfa.verify({factorId:activeFactor,challengeId:challenge.id,code});
+  if(ve)throw ve;
+  input.value='';
+  msg('mfaMsg','');
+  await initialize();
+ }catch(err){msg('mfaMsg','ยืนยัน Authenticator ไม่สำเร็จ: '+(err?.message||'ไม่ทราบสาเหตุ')+' — กรุณาลองรหัสล่าสุดอีกครั้ง');}
+ finally{button.disabled=false;}
+});
 async function logout(){if(db)await db.auth.signOut();member=null;sessionUser=null;$('signOut').hidden=true;show('login');}
 $('signOut').addEventListener('click',logout);$('deniedOut').addEventListener('click',logout);
 function tab(name){document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));document.querySelectorAll('section.tab').forEach(el=>el.hidden=el.id!=='tab-'+name);}
