@@ -10,6 +10,7 @@ const show=id=>{for(const x of ['setup','login','mfa','denied','workspace'])$(x)
 const msg=(id,s)=>{$(id).textContent=s;};
 const configured=typeof config.supabaseUrl==='string'&&/^https:\/\/[^ ]+\.supabase\.co\/?$/.test(config.supabaseUrl)&&typeof config.supabasePublishableKey==='string'&&config.supabasePublishableKey.length>20;
 let db,sessionUser=null,member=null,activeFactor=null,selectedQuoteId=null,quotes=[],events=[];
+window.SCWORK_ADMIN_BRIDGE={getSession:()=>({db,sessionUser,member})};
 if(!configured||!window.supabase?.createClient) {
  show('setup');
  if(configured) $('setup').querySelector('p').textContent='โหลดไลบรารีเชื่อม Supabase ไม่สำเร็จ กรุณาตรวจสอบเครือข่ายและ Content Security Policy';
@@ -31,6 +32,7 @@ async function initialize(){
  $('quoteDate').value=new Date().toISOString().slice(0,10);
  $('saveQuote').disabled=m.role==='viewer';
  await refresh();
+ window.dispatchEvent(new Event('scwork-admin-ready'));
 }
 $('loginForm').addEventListener('submit',async e=>{e.preventDefault();const btn=$('loginForm').querySelector('button');btn.disabled=true;try{
  const {error}=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});
@@ -95,7 +97,7 @@ $('mfaForm').addEventListener('submit',async e=>{
  }catch(err){msg('mfaMsg','ยืนยัน Authenticator ไม่สำเร็จ: '+(err?.message||'ไม่ทราบสาเหตุ')+' — กรุณาลองรหัสล่าสุดอีกครั้ง');}
  finally{button.disabled=false;}
 });
-async function logout(){if(db)await db.auth.signOut();member=null;sessionUser=null;$('signOut').hidden=true;show('login');}
+async function logout(){if(db)await db.auth.signOut();member=null;sessionUser=null;window.dispatchEvent(new Event('scwork-admin-signout'));$('signOut').hidden=true;show('login');}
 $('signOut').addEventListener('click',logout);$('deniedOut').addEventListener('click',logout);
 function tab(name){document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));document.querySelectorAll('section.tab').forEach(el=>el.hidden=el.id!=='tab-'+name);}
 document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>tab(b.dataset.tab)));

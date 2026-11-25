@@ -1,6 +1,6 @@
-<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="referrer" content="strict-origin-when-cross-origin"><title>SCWork Admin | Pricing Control</title><link rel="stylesheet" href="styles.css"><link rel="icon" href="scwork-logo.png" type="image/png"></head>
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="referrer" content="strict-origin-when-cross-origin"><title>SCWork Admin | Pricing Control</title><link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="cost-management.css"><link rel="stylesheet" href="job-profitability.css"><link rel="stylesheet" href="rate-card-publishing.css"><link rel="icon" href="scwork-logo.png" type="image/png"></head>
 <body>
-<header class="topbar"><div class="wrap bar"><a class="brand" href="/" aria-label="SCWork Admin"><img src="scwork-logo.png" alt="SCWork"></a><div class="brand-right"><span class="eyebrow">PRICING CONTROL / PRIVATE</span><span class="appversion">v2.1.32</span><button class="subtle" id="signOut" hidden>ออกจากระบบ</button></div></div></header>
+<header class="topbar"><div class="wrap bar"><a class="brand" href="/" aria-label="SCWork Admin"><img src="scwork-logo.png" alt="SCWork"></a><div class="brand-right"><span class="eyebrow">PRICING CONTROL / PRIVATE</span><span class="appversion">v2.1.35</span><button class="subtle" id="signOut" hidden>ออกจากระบบ</button></div></div></header>
 <div class="wrap">
 <section id="setup" class="center-card" hidden><span class="eyebrow">SETUP REQUIRED</span><h1>เชื่อมระบบหลังบ้าน</h1><p>ยังไม่ได้ตั้งค่า Supabase Project กรุณาอ่าน <code>README_ADMIN.md</code> และกำหนด URL / Publishable Key ใน <code>config.js</code> ก่อนใช้งาน</p><p class="muted">ไม่มีบัญชีทดลองหรือรหัสผ่านเริ่มต้น และไม่มีข้อมูลต้นทุนถูกเผยแพร่ในหน้านี้</p></section>
 <section id="login" class="center-card" hidden><span class="eyebrow">AUTHORIZED MEMBERS ONLY</span><h1>เข้าสู่ SCWork Admin</h1><p>จัดการราคาต้นทุน Supplier สำหรับ SCWork พร้อมตรวจสิทธิ์จากฐานข้อมูลและ MFA</p><form id="loginForm" class="stack"><label>อีเมล <input id="email" type="email" autocomplete="username" required placeholder="name@company.com"></label><label>รหัสผ่าน <input id="password" type="password" autocomplete="current-password" required></label><button class="primary" type="submit">เข้าสู่ระบบ</button></form><p id="loginMsg" class="message" role="status"></p></section>
@@ -9,13 +9,193 @@
 <main id="workspace" hidden>
 <section class="intro"><div><span class="eyebrow">SUPPLIER PRICE GOVERNANCE</span><h1>ควบคุมต้นทุน<br><span>ก่อนเปลี่ยนราคาขาย</span></h1><p>รับราคา Supplier เก็บหลักฐาน ตรวจความเปลี่ยนแปลง และให้ Owner อนุมัติ ก่อนนำไปวิเคราะห์ B2B/B2C ใน Pricing Master</p></div><div class="intro-note"><span class="dot"></span><strong id="identity">SCWork Admin</strong><span id="roleName">กำลังตรวจสิทธิ์</span><p>อนุมัติต้นทุนไม่เท่ากับอนุมัติราคาขาย</p></div></section>
 <section class="metrics" aria-label="สรุปสถานะ"><div><span>กลุ่มวัสดุ</span><strong>06</strong><small>ประเภทวัสดุ SCWork</small></div><div><span>ใบราคา Supplier</span><strong id="mTotal">–</strong><small>รายการทั้งหมด</small></div><div><span>รอตรวจสอบ</span><strong id="mPending">–</strong><small>ยังไม่อนุมัติ</small></div><div><span>ผ่านการอนุมัติ</span><strong id="mApproved">–</strong><small>ยังไม่เผยแพร่ราคาขาย</small></div></section>
-<nav class="tabs" aria-label="Pricing Control Sections"><button data-tab="quotes" class="active">ราคา Supplier</button><button data-tab="new">รับใบราคาใหม่</button><button data-tab="audit">ประวัติการเปลี่ยนแปลง</button><button data-tab="publish">Rate Card &amp; Publishing</button></nav>
+<nav class="tabs" aria-label="Pricing Control Sections"><button data-tab="quotes" class="active">ราคา Supplier</button><button data-tab="cost">ต้นทุน &amp; กำไร</button><button data-tab="jobs">กำไรตามใบงาน</button><button data-tab="new">รับใบราคาใหม่</button><button data-tab="audit">ประวัติการเปลี่ยนแปลง</button><button data-tab="publish">Rate Card &amp; Publishing</button></nav>
 <section id="tab-quotes" class="tab"><div class="section-head"><div><span class="eyebrow">SUPPLIER PRICES</span><h2>ข้อมูลต้นทุนจากผู้ผลิต</h2></div><button id="reload" class="secondary">รีเฟรชข้อมูล</button></div><div class="table-wrap"><table><thead><tr><th>Supplier / วัสดุ</th><th>เอกสาร</th><th>ต้นทุนต่อหน่วย</th><th>สถานะ</th><th>หลักฐาน / ดำเนินการ</th></tr></thead><tbody id="quoteRows"><tr><td colspan="5">ยังไม่มีข้อมูล</td></tr></tbody></table></div><p class="hint">ต้นทุนที่แสดงรวม VAT ของ Supplier ที่ไม่มีสิทธิเครดิต และค่าขนส่งที่กรอกแล้ว ตรวจสเปกและหน่วยก่อนอนุมัติทุกครั้ง</p><div id="reviewPanel" class="review" hidden><h3>อนุมัติต้นทุน Supplier</h3><p id="reviewContext"></p><label>เหตุผลการอนุมัติ (อย่างน้อย 8 ตัวอักษร)<textarea id="reviewReason" rows="3" maxlength="500" placeholder="ตรวจสอบเอกสารและหน่วยราคาแล้ว..." required></textarea></label><div class="actions"><button class="primary" id="approveQuote">ยืนยันอนุมัติต้นทุน</button><button class="secondary" id="cancelReview">ยกเลิก</button></div><p class="hint">ระบบบันทึกผู้อนุมัติจากบัญชีที่ Login จริง ไม่ใช่ชื่อที่พิมพ์เอง และไม่ได้เผยแพร่ราคาสู่เว็บลูกค้า</p></div></section>
+
+<section id="tab-cost" class="tab cost-tab" hidden>
+  <div class="cost-header"><div>
+    <span class="eyebrow">FINANCIAL CONTROL · INTERNAL</span>
+    <h2>ต้นทุน &amp; กำไร</h2>
+    <p>ต้นทุนผลิต + เวลาแรงงาน + ค่าใช้จ่ายส่วนกลาง → วิเคราะห์ราคาที่ควรเสนออย่างตรวจสอบได้</p>
+  </div><span class="cost-privacy">PRIVATE COST DATA · ไม่เผยแพร่ราคาอัตโนมัติ</span></div>
+  <div class="cost-subtabs" role="group" aria-label="Cost Management">
+    <button type="button" data-cost-view="overview" class="active">ภาพรวม</button>
+    <button type="button" data-cost-view="master">ตั้งค่าต้นทุน</button>
+    <button type="button" data-cost-view="simulator">จำลองราคางาน</button>
+    <button type="button" data-cost-view="roadmap">Development Phases</button>
+  </div>
+  <p id="costMessage" class="cost-message" role="status" aria-live="polite"></p>
+  <div id="cost-view-overview" class="cost-view">
+    <div class="cost-toolbar"><label class="cost-period-label">Cost Profile <select id="costProfileSelect" aria-label="เลือก Cost Profile"><option value="">ยังไม่มี Cost Profile</option></select></label><button type="button" id="costReload" class="secondary">รีเฟรช</button></div>
+    <div class="cost-kpis">
+      <article class="cost-kpi"><span>ต้นทุนส่วนกลาง/เดือน</span><strong id="costMonthly">–</strong><small>หลังจัดสรรเฉพาะส่วนธุรกิจ</small></article>
+      <article class="cost-kpi"><span>Overhead ต่อชั่วโมง</span><strong id="costHourly">–</strong><small>บาทต่อ Productive Hour</small></article>
+      <article class="cost-kpi"><span>Productive Hours</span><strong id="costHours">–</strong><small>ชั่วโมงทำงานที่จัดสรรได้/เดือน</small></article>
+      <article class="cost-kpi"><span>Cost Profile Status</span><strong id="costStatus">ยังไม่มี</strong><small>ต้องอนุมัติก่อนใช้เป็นฐานภายใน</small></article>
+    </div>
+    <div class="cost-panels">
+      <article class="cost-panel"><div class="cost-panel-head"><h3>Operating Cost Breakdown</h3><small>จัดกลุ่มค่าใช้จ่ายรายเดือน</small></div><div id="costBars" class="cost-bars"><p class="muted">ยังไม่มีข้อมูลที่บันทึก</p></div></article>
+      <article class="cost-panel"><div class="cost-panel-head"><h3>Cost Governance</h3><small>ข้อกำหนดก่อนคำนวณราคา</small></div>
+        <div class="cost-rule"><b>01</b><div><strong>ไม่คิดต้นทุนซ้ำ</strong><span>หาก Supplier รวมค่าพิมพ์ ค่าไฟเครื่องและค่าแรงผลิตแล้ว ไม่บวกอีก</span></div></div>
+        <div class="cost-rule"><b>02</b><div><strong>แยก Direct Labor จาก Overhead</strong><span>ค่าแรงที่คิดตามชั่วโมงงาน ต้องไม่อยู่ในเงินเดือนทางอ้อมซ้ำอีก</span></div></div>
+        <div class="cost-rule"><b>03</b><div><strong>ต้นทุน ≠ ราคาขาย</strong><span>ต้นทุนที่อนุมัติยังต้องผ่าน Margin Review และ Public Rate Card อีกชั้น</span></div></div>
+      </article>
+    </div>
+    <div class="cost-panel cost-snapshots"><div class="cost-panel-head"><h3>Monthly Cost Profiles</h3><small>เก็บ Snapshot และเหตุผลการอนุมัติ</small></div><div id="costSnapshots" class="cost-snapshot-list"><p class="muted">ยังไม่มีประวัติ</p></div>
+      <div id="costApprovalPanel" class="cost-approval" hidden><h3>อนุมัติ Cost Profile (Owner เท่านั้น)</h3><p id="costApprovalContext"></p><label>เหตุผลการอนุมัติ <textarea id="costApprovalReason" rows="2" minlength="8" maxlength="500" placeholder="ตรวจสอบอัตราค่าแรง ค่าใช้จ่ายและชั่วโมงทำงานแล้ว"></textarea></label><div class="actions"><button type="button" class="primary" id="costApproveConfirm">ยืนยันอนุมัติ</button><button type="button" class="secondary" id="costApproveCancel">ยกเลิก</button></div></div>
+    </div>
+  </div>
+  <div id="cost-view-master" class="cost-view" hidden>
+    <div class="cost-section-note"><strong>สร้าง Cost Profile รายเดือน</strong><p>รายการเป็นร่างภายใน ค่าที่กรอกไม่ใช่ราคาที่รับรองของ SCWork · หากต้นทุนเปลี่ยน ให้สร้าง Snapshot ใหม่และอนุมัติ ไม่ทับของเก่า</p></div>
+    <form id="costProfileForm" class="cost-form">
+      <div class="cost-form-title"><span class="eyebrow">01 / CAPACITY &amp; OVERHEAD</span><h3>ฐานต้นทุนธุรกิจ</h3></div>
+      <div class="cost-form-grid"><label>เดือนที่เริ่มใช้<input type="month" id="costPeriod" required></label><label>Productive Hours ต่อเดือน (ชม.)<input type="number" id="costProductiveHours" min="0.01" max="744" step="any" placeholder="กรอกชั่วโมงจริง" required></label></div>
+      <p class="cost-help">ชั่วโมงที่ใช้บริการลูกค้าได้จริง ไม่ใช่จำนวนชั่วโมงทั้งหมดในปฏิทิน</p>
+      <div class="cost-inline-head"><h3>ค่าใช้จ่ายส่วนกลางต่อเดือน</h3><button type="button" class="secondary" id="costAddOverhead">เพิ่มค่าใช้จ่าย</button></div>
+      <div id="costOverheadRows" class="cost-input-list"></div>
+      <p class="cost-help">ใช้ยอดต้นทุนธุรกิจจริงหลัง VAT ฝั่งซื้อที่เครดิตไม่ได้ และระบุสัดส่วนที่ใช้กับ SCWork เช่น 50% ของค่าไฟบ้าน ห้ามรวมค่าแรง Direct Labor หรือค่าไฟเครื่องที่คิดไว้รายออเดอร์ซ้ำ</p>
+      <div class="cost-form-title"><span class="eyebrow">02 / LABOR COST</span><h3>อัตราค่าแรงที่ใช้กับงานจริง</h3></div>
+      <div id="costLaborRows" class="cost-labor-grid"></div>
+      <p class="cost-help">อัตราเป็นต้นทุนแรงงานที่รวมภาระนายจ้างและค่าแรงเจ้าของตามชั่วโมงทำงาน ไม่ใช่ราคาค่าบริการที่เรียกลูกค้า</p>
+      <div class="cost-form-title"><span class="eyebrow">03 / PRICING POLICY</span><h3>กฎกำไรและต้นทุนการขาย</h3></div>
+      <div class="cost-form-grid">
+        <label>Target Margin B2C (%)<input id="costB2cMargin" type="number" min="0" max="95" step="0.1" placeholder="กำหนดเป้าหมาย" required></label>
+        <label>Target Margin B2B (%)<input id="costB2bMargin" type="number" min="0" max="95" step="0.1" placeholder="กำหนดเป้าหมาย" required></label>
+        <label>ค่าธรรมเนียมรับชำระ B2C (% ของยอดขาย)<input id="costB2cFee" type="number" min="0" max="90" step="0.01" value="0" required></label>
+        <label>ค่าธรรมเนียมรับชำระ B2B (% ของยอดขาย)<input id="costB2bFee" type="number" min="0" max="90" step="0.01" value="0" required></label>
+        <label>ต้นทุนเอกสาร/ประสานงาน B2B (บาท/ออเดอร์)<input id="costB2bAdmin" type="number" min="0" step="0.01" value="0" required></label>
+        <label>เครดิตเทอม B2B (วัน)<input id="costB2bDays" type="number" min="0" max="3650" step="1" value="0" required></label>
+        <label>ต้นทุนเงินทุนต่อปี B2B (%)<input id="costFinance" type="number" min="0" max="90" step="0.1" value="0" required></label>
+        <label>สำรองของเสียที่ยังไม่รวมในต้นทุน Supplier (%)<input id="costRisk" type="number" min="0" max="90" step="0.1" value="0" required></label>
+      </div>
+      <label>หมายเหตุ/หลักฐานอ้างอิง (ไม่เกิน 1,200 ตัวอักษร)<textarea id="costNotes" maxlength="1200" rows="3" placeholder="ที่มาของบิลค่าไฟ ค่าเช่า ค่าแรง และสมมติฐานจำนวนชั่วโมง"></textarea></label>
+      <div class="cost-form-actions"><button class="primary" type="submit" id="costSaveProfile">บันทึก Cost Profile (Draft)</button><button type="button" class="secondary" id="costLocalPreview">ดูสรุปต้นทุนจากข้อมูลที่กรอก</button></div>
+      <div id="costDraftPreview" class="cost-draft-preview" hidden></div>
+      <p class="cost-help">ผู้ใช้สิทธิ์ Viewer ดูข้อมูลได้อย่างเดียว · Draft ยังใช้เป็นเรทราคาเสนอขายไม่ได้</p>
+    </form>
+  </div>
+  <div id="cost-view-simulator" class="cost-view" hidden>
+    <div class="cost-section-note"><strong>Internal Pricing Simulator</strong><p>ใช้ Cost Profile ที่เลือก หรือร่างที่กรอกไว้ครบแล้วเพื่อทดลองก่อนบันทึก ตัวเลขนี้ไม่ใช่ใบเสนอราคา ไม่เขียน Public Rate Card และไม่เรียกเก็บ VAT เมื่อ SCWork ยังไม่จด VAT</p></div>
+    <form id="costSimForm" class="cost-form">
+      <div class="cost-form-title"><span class="eyebrow">JOB COSTING</span><h3>ต้นทุนของออเดอร์นี้</h3></div>
+      <div class="cost-form-grid">
+        <label>ค่าจ้างผลิตจาก Supplier (บาท)<input type="number" id="simSupplier" min="0" step="0.01" placeholder="ต้องใช้ยอดใบราคาที่ตรวจแล้ว" required></label>
+        <label>วัสดุเพิ่มเติมที่ SCWork จ่าย (บาท)<input type="number" id="simExtra" min="0" step="0.01" value="0"></label>
+        <label>ค่าบรรจุภัณฑ์ (บาท)<input type="number" id="simPacking" min="0" step="0.01" value="0"></label>
+        <label>ค่าขนส่งถึงลูกค้า (บาท)<input type="number" id="simFreight" min="0" step="0.01" value="0"></label>
+        <label>ค่าไฟเครื่องจักรที่เราจ่ายเอง (บาท)<input type="number" id="simEnergy" min="0" step="0.01" value="0"></label>
+        <label>ค่าจ้างงานภายนอกเพิ่มเติม (บาท)<input type="number" id="simOutside" min="0" step="0.01" value="0"></label>
+        <label>ชั่วโมงกิจกรรมที่ใช้จัดสรร Overhead<input type="number" id="simActivityHours" min="0.01" step="any" placeholder="ชั่วโมงจริงของงาน" required></label>
+      </div>
+      <div class="cost-form-title"><span class="eyebrow">ACTIVITY-BASED LABOR</span><h3>เวลาทำงานแต่ละประเภท</h3></div><div class="cost-labor-grid" id="costSimLabor"></div>
+      <button type="submit" class="primary">คำนวณ B2C / B2B</button>
+    </form>
+    <div id="costSimResult" class="cost-sim-result" hidden></div>
+  </div>
+  <div id="cost-view-roadmap" class="cost-view" hidden>
+    <div class="cost-section-note"><strong>Development Roadmap</strong><p>แต่ละ Phase ต้องผ่าน QA และ Approval Gate ก่อนเปิดใช้งานจริง เพื่อไม่ให้เพิ่มความเสี่ยงในระบบราคาเดิม</p></div>
+    <div class="cost-phase-list">
+      <article><span class="cost-phase-index">01</span><div><span class="eyebrow">IMPLEMENTED IN PACKAGE</span><h3>Cost Foundation &amp; Internal Simulator</h3><p>บันทึกค่าใช้จ่ายรายเดือน ค่าแรง Productive Hours, Pricing Policy และทดลองราคาจากต้นทุนรวม</p><small>Gate: SQL 002 + ทดสอบ B2C/B2B + ตรวจว่าไม่เผยแพร่ราคาเอง</small></div></article>
+      <article><span class="cost-phase-index">02</span><div><span class="eyebrow">IMPLEMENTED / REQUIRES CLOUD TEST</span><h3>Approval &amp; Cost History</h3><p>Immutable Cost Snapshot, Owner Approval, Audit Trail; เชื่อมกับ Supplier Quotes เดิม</p><small>Gate: ทดสอบ RLS, MFA, Editor/Viewer, รายการต้นทุนจริง และสิทธิ์อนุมัติ</small></div></article>
+      <article><span class="cost-phase-index">03</span><div><span class="eyebrow">IMPLEMENTED IN PACKAGE · CLOUD TEST REQUIRED</span><h3>Job Profitability · Budget vs Actual</h3><p>เชื่อม Cost Profile ที่อนุมัติแล้วกับใบงานจริง เทียบต้นทุนประมาณการกับต้นทุนที่เกิดขึ้น และสรุปกำไรรายเดือน</p><small>Gate: ไม่มีต้นทุนซ้ำ / ทดสอบต้นทุนจริงเทียบงบ / กำหนด Versioning</small></div></article>
+      <article><span class="cost-phase-index">04</span><div><span class="eyebrow">IMPLEMENTED IN PACKAGE · CLOUD TEST REQUIRED</span><h3>Approved Rate Card Publishing</h3><p>อนุมัติเรทราคาขายแยกจากการอนุมัติต้นทุน ส่งเฉพาะข้อมูล Selling Rates ที่ปลอดภัยไป Public Website พร้อม Rollback</p><small>Gate: ทดสอบสูตร ฝั่ง Server, Public Isolation, Rollback และสิทธิ์ Publisher</small></div></article>
+    </div>
+  </div>
+</section>
+
+<section id="tab-jobs" class="tab job-tab" hidden>
+ <div class="job-head"><div><span class="eyebrow">PHASE 03 · JOB PROFITABILITY</span><h2>กำไรตามใบงาน</h2><p>ผูกต้นทุนประมาณการกับ Cost Profile ที่อนุมัติแล้ว แล้วบันทึกต้นทุนจริงเพื่อดู Budget vs Actual โดยไม่แตะราคาขายสาธารณะ</p></div><span class="job-private">PRIVATE · OWNER / EDITOR / VIEWER</span></div>
+ <p class="job-message" id="jobMessage" role="status" aria-live="polite"></p>
+ <div class="job-kpis">
+  <article><span>ใบงานทั้งหมด</span><strong id="jobTotal">–</strong><small>เฉพาะใบงานภายใน</small></article>
+  <article><span>เปิดงานอยู่</span><strong id="jobOpen">–</strong><small>ยังไม่ปิดต้นทุน</small></article>
+  <article><span>ยอดขายงานปิดแล้ว</span><strong id="jobClosedSales">–</strong><small>ราคาตกลง ไม่ใช่เงินรับสุทธิ</small></article>
+  <article><span>กำไรงานปิดแล้ว</span><strong id="jobClosedProfit">–</strong><small>หลังต้นทุนจริงที่บันทึกครบ</small></article>
+ </div>
+ <div class="job-modes" role="group" aria-label="Job Profitability views">
+  <button type="button" class="active" data-job-view="overview">ภาพรวม &amp; รายการงาน</button>
+  <button type="button" data-job-view="create">เปิดใบงานใหม่</button>
+  <button type="button" data-job-view="detail">ต้นทุนจริง &amp; ผลกำไร</button>
+  <button type="button" data-job-view="guide">เกณฑ์การคำนวณ</button>
+ </div>
+ <div id="job-view-overview" class="job-view">
+  <div class="job-toolbar"><label>กรองสถานะ <select id="jobStatusFilter"><option value="all">ทุกสถานะ</option><option value="open">กำลังดำเนินการ</option><option value="closed">ปิดต้นทุนแล้ว</option></select></label><label>ค้นหาใบงาน <input id="jobSearch" placeholder="เลขที่งาน / ลูกค้า" type="search"></label><button class="secondary" id="jobReload" type="button">รีเฟรชข้อมูล</button></div>
+  <div class="job-split">
+   <section class="job-panel"><div class="job-panel-title"><h3>Budget vs Actual · ภาพรวม</h3><small>แยกรายการที่ยังไม่ทราบต้นทุนจริง</small></div><div id="jobMonthlySummary" class="job-monthly"><p class="muted">ยังไม่มีงานปิดต้นทุน</p></div></section>
+   <section class="job-panel"><div class="job-panel-title"><h3>Cost Governance</h3><small>ระบบป้องกัน Margin เพี้ยน</small></div><div class="job-rules"><p><b>01</b><span>Estimate ต้องใช้ Cost Profile สถานะ Approved เท่านั้น</span></p><p><b>02</b><span>Actual เป็น Snapshot ทั้งชุด ไม่ใช่ยอดบวกทบจากรอบก่อน</span></p><p><b>03</b><span>สรุปกำไรเฉพาะงานที่ Owner ปิดและยืนยันต้นทุนแล้ว</span></p></div></section>
+  </div>
+  <section class="job-panel"><div class="job-panel-title"><h3>ทะเบียนใบงาน</h3><small>เลือกงานเพื่อดูต้นทุนประมาณการ ต้นทุนจริง และ Audit Trail</small></div><div class="table-wrap"><table class="job-table"><thead><tr><th>ใบงาน / ลูกค้า</th><th>ประเภท</th><th>ยอดขาย</th><th>Budget</th><th>Actual</th><th>Profit</th><th>สถานะ</th><th>ดูรายละเอียด</th></tr></thead><tbody id="jobRows"><tr><td colspan="8">ยังไม่มีใบงาน</td></tr></tbody></table></div></section>
+ </div>
+ <div id="job-view-create" class="job-view" hidden>
+  <div class="job-panel"><div class="job-panel-title"><h3>เปิดใบงาน + บันทึก Estimated Cost</h3><small>เมื่อบันทึก ระบบจะคำนวณ Budget จาก Cost Profile ที่อนุมัติแล้วอีกครั้งใน Supabase</small></div>
+   <form id="jobCreateForm" class="job-form">
+    <div class="job-form-grid">
+     <label>เลขที่ใบงาน<input id="jobCode" required maxlength="60" placeholder="SCW-2026-0001"></label>
+     <label>ชื่ออ้างอิงลูกค้า<input id="jobCustomer" maxlength="120" required placeholder="ใช้รหัสลูกค้าหรือชื่อบริษัท"></label>
+     <label>วันที่เริ่มงาน<input id="jobDate" type="date" required></label>
+     <label>ประเภทลูกค้า<select id="jobBuyer"><option value="b2c">B2C · บุคคลทั่วไป</option><option value="b2b">B2B · นิติบุคคล</option></select></label>
+     <label>วัสดุ<select id="jobMaterial"><option value="pp-white">PP ขาว</option><option value="pp-clear">PP ใส</option><option value="pvc-sqm">PVC</option><option value="paper-sticker">กระดาษขาว</option><option value="kraft-sticker">กระดาษคราฟท์</option><option value="vinyl-banner">ไวนิล</option></select></label>
+     <label>จำนวนชิ้น<input id="jobQuantity" type="number" min="1" max="100000000" step="1" required placeholder="จำนวน"></label>
+     <label>ราคาขายที่ลูกค้าตกลง (บาท)<input id="jobSale" type="number" min="0.01" max="100000000000" step="0.01" required placeholder="ไม่ได้คำนวณจาก Public Rate Card อัตโนมัติ"></label>
+     <label>Cost Profile ที่อนุมัติ<select id="jobProfile" required><option value="">ยังไม่มี Cost Profile ที่อนุมัติ</option></select></label>
+     <label class="job-wide">อ้างอิงใบราคา Supplier (ถ้ามี)<select id="jobSupplierQuote"><option value="">ไม่ผูกใบราคา · กรอกต้นทุนตามเอกสารของงาน</option></select></label>
+    </div>
+    <div class="job-section-title"><span>01 / COST INPUTS</span><h3>ต้นทุนประมาณการของงาน</h3></div>
+    <p class="job-help">กรอกยอดรวมของงานนี้ หน่วยเป็นบาท ไม่ใช่บาท/แผ่น ห้ามนำค่าเครื่องและค่าแรงของ Supplier ที่รวมในค่าจ้างผลิตแล้วมานับซ้ำ</p>
+    <div class="job-form-grid" id="jobEstimatedInputs"></div>
+    <div class="job-section-title"><span>02 / LABOR &amp; ACTIVITY</span><h3>ชั่วโมงการทำงาน</h3></div>
+    <div class="job-form-grid" id="jobLaborInputs"></div>
+    <div class="job-form-grid"><label>Productive Activity Hours (ชม.)<input id="jobActivity" type="number" min="0.01" max="744" step="0.25" required value="1"></label><label>หมายเหตุงาน<input id="jobNotes" maxlength="1000" placeholder="เงื่อนไขผลิต / ข้อสมมติ"></label></div>
+    <div class="job-actions"><button type="button" id="jobPreview" class="secondary">ลองคำนวณ Budget</button><button type="submit" id="jobCreate" class="primary">บันทึกใบงาน (Private)</button></div>
+   </form><div id="jobPreviewResult" class="job-preview" hidden></div>
+  </div>
+ </div>
+ <div id="job-view-detail" class="job-view" hidden>
+  <div class="job-toolbar"><label>เลือกใบงาน <select id="jobSelected"><option value="">ยังไม่มีใบงาน</option></select></label><button id="jobDetailReload" class="secondary" type="button">รีเฟรชรายละเอียด</button></div>
+  <div id="jobDetails" class="job-panel"><p class="muted">เลือกใบงานจากทะเบียนก่อน</p></div>
+  <div id="jobActualPanel" class="job-panel" hidden><div class="job-panel-title"><h3>บันทึก Actual Cost · Revision ใหม่</h3><small>กรอกครบทุกหมวด ระบุ 0 หากไม่มีค่าใช้จ่าย และใส่เลขอ้างอิงเอกสารจริง</small></div>
+    <form id="jobActualForm" class="job-form"><div class="job-form-grid" id="jobActualInputs"></div><div class="job-form-grid"><label>เลขอ้างอิงต้นทุนจริง<input id="jobActualRef" required maxlength="160" placeholder="ใบแจ้งหนี้ / เลขเอกสาร QC / เลขงวด"></label><label>หมายเหตุการปรับต้นทุน<input id="jobActualNote" maxlength="1000" placeholder="อธิบายความต่างจาก Budget"></label></div><p class="job-help">Actual เป็นข้อมูลเต็มชุด การบันทึก Revision ถัดไปจะแทนค่า Revision ล่าสุดในรายงาน โดยเก็บรุ่นเดิมเป็นประวัติ ไม่บวกรวมซ้ำ</p><button type="submit" class="primary" id="jobSaveActual">บันทึก Actual Snapshot</button></form>
+  </div>
+  <div id="jobOwnerPanel" class="job-panel" hidden><div class="job-panel-title"><h3>Owner Controls</h3><small>การเปลี่ยนราคาขายและปิดต้นทุนต้องมีเหตุผล พร้อม Audit Trail</small></div><div class="job-owner-grid"><form id="jobReviseSaleForm"><h4>ปรับยอดขายที่ตกลง</h4><label>ราคาใหม่ (บาท)<input id="jobRevisedSale" type="number" min="0.01" step="0.01" required></label><label>เหตุผล (อย่างน้อย 8 ตัวอักษร)<input id="jobSaleReason" required minlength="8" maxlength="500"></label><button type="submit" class="secondary">บันทึกราคาขายใหม่</button></form><form id="jobCloseForm"><h4>ปิดต้นทุนใบงาน</h4><p class="job-help">ทำได้เมื่อตรวจ Actual Snapshot ครบแล้ว กำไรจึงนับเข้ารายงานผลปิดงาน</p><label>เหตุผลการปิดงาน<input id="jobCloseReason" required minlength="8" maxlength="500"></label><button type="submit" class="primary">ยืนยันปิดงาน</button></form></div></div>
+  <div id="jobEvents" class="job-panel"><div class="job-panel-title"><h3>Revision &amp; Audit Trail</h3><small>บันทึกการเปลี่ยนแปลงย้อนหลัง</small></div><div id="jobEventRows">เลือกใบงานก่อน</div></div>
+ </div>
+ <div id="job-view-guide" class="job-view" hidden><div class="job-split"><section class="job-panel"><h3>Estimated Cost / Budget</h3><p>ค่าจ้าง Supplier + วัสดุเพิ่ม + แพ็ก + ขนส่ง + พลังงานเครื่อง + บริการนอก + Direct Labor + Overhead + Risk Reserve + ค่าใช้จ่ายตาม Buyer Type</p><p class="job-help">Risk Reserve เป็นค่าเผื่อใน Budget เท่านั้น ไม่ใช่ต้นทุนจ่ายจริง และต้องไม่ซ้ำกับของเสียที่ Supplier คิดมาแล้ว</p></section><section class="job-panel"><h3>Actual Cost / Profit</h3><p>ต้นทุนที่ยืนยันแล้วทั้ง 11 หมวด ไม่รวม Risk Reserve ที่ยังไม่ได้เกิดขึ้นจริง</p><p class="job-help">Actual Profit = ราคาขายที่ตกลงล่าสุด − Actual Cost · หัก ณ ที่จ่ายไม่ใช่ส่วนลดราคาขาย · ไม่บวก VAT ขายขณะยังไม่จด VAT</p></section></div><div class="job-panel"><h3>ข้อจำกัดก่อนนำไปใช้จริง</h3><p>Job Profitability เป็นรายงานภายในจากต้นทุนที่บันทึกเอง ไม่ใช่ข้อมูลบัญชีที่ตรวจสอบแล้ว ไม่รวมภาษีเงินได้ ไม่เท่ากับกระแสเงินสด และไม่มีการเผยแพร่ Approved Rate Card อัตโนมัติ</p></div></div>
+</section>
+
 <section id="tab-new" class="tab" hidden><div class="section-head"><div><span class="eyebrow">NEW SUPPLIER SOURCE</span><h2>บันทึกใบราคาต้นทุน</h2></div></div><form id="quoteForm" class="quote-form"><div class="field-grid"><label>วัสดุ<select id="material" required><option value="pp-white">PP ขาว</option><option value="pp-clear">PP ใส</option><option value="pvc-sqm">PVC Sticker</option><option value="paper-sticker">กระดาษขาว</option><option value="kraft-sticker">กระดาษคราฟท์</option><option value="vinyl-banner">ไวนิลแบนเนอร์</option></select></label><label>ชื่อ Supplier<input id="supplier" required maxlength="100"></label><label>เลขที่เอกสาร<input id="documentNo" required maxlength="90"></label><label>วันที่ออกใบราคา<input id="quoteDate" type="date" required></label><label>ใช้ราคาถึงวันที่<input id="validUntil" type="date"></label><label>ราคาตามใบเสนอราคา (บาท)<input id="packPrice" type="number" step="0.01" min="0.01" required></label><label>จำนวนหน่วยที่ราคาอ้างอิง<input id="packUnits" type="number" step="any" min="0.0001" value="1" required></label><label>ภาษีจาก Supplier<select id="taxTreatment"><option value="vat-included">ยอดนี้รวม VAT แล้ว</option><option value="vat-excluded">ต้องบวก VAT 7% ตามใบราคา</option><option value="no-vat">Supplier ไม่คิด VAT</option></select></label><label>ค่าขนส่งเข้าคลังสำหรับรายการนี้ (บาท)<input id="freightCost" type="number" step="0.01" min="0" value="0"></label><label>ลิงก์เอกสาร Supplier (ถ้ามี)<input id="sourceUrl" type="url" placeholder="https://..."></label></div><label>ไฟล์หลักฐาน <span class="muted">PDF/JPG/PNG/WEBP/CSV/XLSX ไม่เกิน 12 MB</span><input id="evidence" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.csv,.xlsx"></label><label>หมายเหตุ<textarea id="notes" rows="2" maxlength="500"></textarea></label><div class="estimate"><span>ต้นทุนต่อหน่วยหลังรวม VAT Supplier / ขนส่งที่กรอก</span><strong id="landedEstimate">–</strong><small id="unitEstimate">ต่อแผ่น A3+</small></div><button class="primary" type="submit" id="saveQuote">บันทึกใบราคา</button><p class="hint">สถานะเริ่มต้นเป็น Draft เท่านั้น การบันทึกไม่ได้แก้ราคาขาย SCWork</p></form></section>
 <section id="tab-audit" class="tab" hidden><div class="section-head"><div><span class="eyebrow">AUDIT HISTORY</span><h2>ประวัติที่ตรวจสอบย้อนหลังได้</h2></div><button class="secondary" id="downloadHistory">Export ประวัติ JSON</button></div><div class="table-wrap"><table><thead><tr><th>วันเวลา</th><th>เหตุการณ์</th><th>ใบราคา</th><th>รายละเอียด</th></tr></thead><tbody id="auditRows"><tr><td colspan="4">ยังไม่มีประวัติ</td></tr></tbody></table></div></section>
-<section id="tab-publish" class="tab" hidden><div class="section-head"><div><span class="eyebrow">CONTROLLED RELEASE</span><h2>Approved Rate Card</h2></div></div><div class="publish-grid"><div><h3>สถานะระบบเผยแพร่</h3><p>Phase 02 นี้รองรับการจัดเก็บต้นทุนและอนุมัติจาก Cloud ส่วนการเผยแพร่ Rate Card อัตโนมัติจะเปิดหลังเชื่อม Pricing Master และผ่านการทดสอบสิทธิ์/สูตรราคาครบ</p><p><strong>ไม่อนุญาตให้ดันต้นทุน Supplier ไปเป็นราคาขายโดยตรง</strong></p></div><div><h3>ลำดับอนุมัติ</h3><ol><li>อนุมัติหลักฐาน Supplier</li><li>คำนวณต้นทุนรวมและ Margin B2C/B2B ใน Pricing Master</li><li>อนุมัติ Public Rate Card ที่ไม่มีต้นทุนภายใน</li><li>เผยแพร่เฉพาะ Selling Rates ผ่าน API</li></ol></div></div><button class="secondary" id="downloadApproved">Export ต้นทุนที่อนุมัติ (Private JSON)</button></section>
+<section id="tab-publish" class="tab" hidden>
+ <div class="rate-section">
+  <div class="rate-heading"><div><span class="rate-label">PHASE 04 · CONTROLLED RELEASE</span><h2>Rate Card &amp; Publishing</h2><p>ส่งราคาขายที่ผ่าน Pricing Master → Draft → Owner Review → Publish → Rollback โดยไม่เผยแพร่ข้อมูลต้นทุน Supplier และไม่เพิ่ม VAT ขาย</p></div><span class="rate-flag">PRIVATE ADMIN · Owner Approval</span></div>
+  <div class="rate-kpis">
+   <article class="rate-kpi"><span>LIVE VERSION</span><strong id="rateCardLiveVersion">ยังไม่เผยแพร่</strong><small>ราคาที่ลูกค้าเข้าถึงได้</small></article>
+   <article class="rate-kpi"><span>LIVE UPDATED</span><strong style="font-size:1.1rem" id="rateCardLiveDate">—</strong><small>เวลาที่เผยแพร่จากฐานข้อมูล</small></article>
+   <article class="rate-kpi"><span>PUBLIC MATERIALS</span><strong id="rateCardLiveMaterial">—</strong><small>จำนวนวัสดุที่มีราคา</small></article>
+   <article class="rate-kpi"><span>VERSION HISTORY</span><strong id="rateCardVersionCount">0</strong><small>ทุก Draft / Published / Rollback</small></article>
+  </div>
+  <p id="rateCardMessage" class="rate-message" role="status" aria-live="polite">กำลังรอตรวจการเชื่อมต่อฐานข้อมูล</p>
+  <div class="rate-layout">
+   <div class="rate-panel"><span class="rate-label">01 · DRAFT SELLING RATES</span><h3>นำเข้า Approved Rate Card</h3><p>เลือกไฟล์ <code>pricing-public-data.js</code> ที่ส่งออกจาก Pricing Master หรือ JSON ที่มีโครงสร้างเดียวกัน ระบบจะ Parse JSON โดยไม่รัน JavaScript</p>
+    <label>ไฟล์ราคาขายเท่านั้น (ไม่ใช่ Pricing Master ต้นทุน)<input id="rateCardFile" type="file" accept=".json,.js,application/json,text/javascript"></label>
+    <label>Cost Profile ที่อนุมัติแล้ว<select id="rateCardProfile"><option value="">เลือก Cost Profile</option></select></label>
+    <p class="rate-instructions">ไฟล์ราคาขายต้องผ่านการตรวจสูตร Margin B2C/B2B และต้นทุนอ้างอิงแยกก่อนยืนยันจริง ระบบจะตรวจโครงสร้างและความสมเหตุสมผลของ Tier แต่ไม่สามารถรับรอง Margin จากไฟล์ที่ไม่มีต้นทุนได้โดยลำพัง</p>
+    <button type="button" id="rateCardSubmit" class="primary" disabled>บันทึกเป็น Draft</button>
+   </div>
+   <div class="rate-panel"><span class="rate-label">02 · APPROVAL &amp; RELEASE</span><h3>เลือกเวอร์ชันเพื่อดำเนินการ</h3>
+    <label>Rate Card Version<select id="rateCardSelected"><option value="">เลือกรายการ</option></select></label>
+    <label>เหตุผล / อ้างอิงการตรวจ (อย่างน้อย 16 ตัวอักษร)<textarea id="rateCardActionReason" rows="3" maxlength="1000" placeholder="อ้างอิง Pricing Master, Cost Profile, วันที่ตรวจราคาขาย และเหตุผลปรับราคา"></textarea></label>
+    <label class="rate-check"><input type="checkbox" id="rateCardMarginAck"><span>Owner ยืนยันว่าตรวจอัตรากำไร B2C/B2B, สเปก, ต้นทุน และราคาขายกับหลักฐานภายในแล้ว</span></label>
+    <div class="rate-actions"><button type="button" class="secondary" id="rateCardReload">รีเฟรชข้อมูล</button><button type="button" id="rateCardApprove" class="secondary" disabled>อนุมัติราคา</button><button type="button" id="rateCardPublish" class="primary" disabled>เผยแพร่ LIVE</button><button type="button" id="rateCardRollback" class="secondary" disabled>Rollback เวอร์ชันนี้</button></div>
+   </div>
+  </div>
+  <div class="rate-panel" style="margin-top:20px"><span class="rate-label">03 · PRICE CHANGE IMPACT</span><h3 id="rateCardSelectedSummary">เปรียบเทียบ Selling Rates</h3><p>เปรียบเทียบราคาต่อหน่วยใน Tier แรกของ B2C กับราคา Live; ต้องตรวจ Tier อื่นและค่าบริการเสริมใน Pricing Master ก่อนอนุมัติ</p><div class="rate-table-scroll"><table class="rate-table"><thead><tr><th>วัสดุ</th><th>หน่วย</th><th>LIVE · B2C</th><th>เวอร์ชันใหม่ · B2C / B2B</th><th>เปลี่ยนแปลง B2C</th></tr></thead><tbody id="rateCardComparison"><tr><td colspan="5">ยังไม่มีรายการให้เปรียบเทียบ</td></tr></tbody></table></div></div>
+  <div class="rate-panel" style="margin-top:20px"><span class="rate-label">04 · AUDIT &amp; ROLLBACK</span><h3>ประวัติ Rate Card ทุกเวอร์ชัน</h3><div class="rate-table-scroll"><table class="rate-table"><thead><tr><th>เวอร์ชัน</th><th>สถานะ</th><th>วัสดุ</th><th>สร้างวันที่</th><th>ดำเนินการ</th></tr></thead><tbody id="rateCardHistory"><tr><td colspan="5">ยังไม่มีข้อมูล</td></tr></tbody></table></div></div>
+  <div class="rate-instructions" style="margin-top:18px">การอนุมัติ Cost Profile หรือ Supplier ไม่ทำให้ราคา LIVE เปลี่ยนโดยอัตโนมัติ ต้องผ่าน Owner Approval และ Publish อีกขั้น · เว็บไซต์ลูกค้าอ่านเฉพาะ Live Selling Snapshot จาก Supabase แบบ Read-only · หาก Cloud Rate ไม่พร้อม เว็บจะกลับไปให้ขอราคาโดยตรง</div>
+  <div style="margin-top:18px"><button class="secondary" id="downloadApproved">Export ต้นทุนอนุมัติ (Private JSON สำหรับ Pricing Master)</button></div>
+ </div>
+</section>
 <p id="globalMsg" class="message" role="status" aria-live="polite"></p>
 </main>
 </div><footer>SCWork — Internal Pricing Control · ไม่ใช่เว็บไซต์ลูกค้า · การเข้าถึงข้อมูลถูกควบคุมที่ Supabase Database</footer>
-<script src="config.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8/dist/umd/supabase.min.js"></script><script src="pricing-utils.js"></script><script type="module" src="app.js"></script>
+<script src="config.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8/dist/umd/supabase.min.js"></script><script src="pricing-utils.js"></script><script src="cost-engine.js"></script><script src="job-engine.js"></script><script src="rate-card-guard.js"></script><script type="module" src="app.js"></script><script type="module" src="cost-management.js"></script><script type="module" src="job-profitability.js"></script><script type="module" src="rate-card-publishing.js"></script>
 </body></html>

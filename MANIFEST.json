@@ -1,0 +1,113 @@
+{
+  "release": "V2.1.35 cumulative upgrade from V2.1.32",
+  "source_patches": [
+    "SCWORK_Admin_V2.1.32_to_V2.1.34_Upgrade.zip",
+    "SCWORK_Admin_V2.1.35_Phase04_Patch.zip"
+  ],
+  "production_modified": false,
+  "config_included": false,
+  "javascript_syntax_checks": 7,
+  "references_validated": [
+    "styles.css",
+    "cost-management.css",
+    "job-profitability.css",
+    "rate-card-publishing.css",
+    "scwork-logo.png",
+    "config.js",
+    "pricing-utils.js",
+    "cost-engine.js",
+    "job-engine.js",
+    "rate-card-guard.js",
+    "app.js",
+    "cost-management.js",
+    "job-profitability.js",
+    "rate-card-publishing.js"
+  ],
+  "files": [
+    {
+      "path": "INSTALL_FIRST.md",
+      "sha256": "0cc316c9a82689b801a22b7cb2df18e3c5c0e9355316d9c02931a21288e7dc07",
+      "size_bytes": 5359
+    },
+    {
+      "path": "admin-deploy/app.js",
+      "sha256": "071a711067141305e1b08717499cd6816c666b76db84c283860ee61f63486481",
+      "size_bytes": 17367
+    },
+    {
+      "path": "admin-deploy/cost-engine.js",
+      "sha256": "a3e7c16c7745cac2ea2a4be625d35e97f9384879ec63d62c1ff66bdbafb5f85e",
+      "size_bytes": 7230
+    },
+    {
+      "path": "admin-deploy/cost-management.css",
+      "sha256": "2e49ca544a5aadb2fbbf16d7d76d01af9db8bb74ab6b82e9d45be9df62ab6ce6",
+      "size_bytes": 8397
+    },
+    {
+      "path": "admin-deploy/cost-management.js",
+      "sha256": "dbd77335a4a0bd4ad8989990a57b86d282538e6caf815bd39731f708b1a31041",
+      "size_bytes": 23186
+    },
+    {
+      "path": "admin-deploy/index.html",
+      "sha256": "f1f4e9527ebd0258ac3ebe7c6d569864d7b9e076efca7aa9cb225a79558414ec",
+      "size_bytes": 47425
+    },
+    {
+      "path": "admin-deploy/job-engine.js",
+      "sha256": "d9bdf591630b79b19541ce5f9948dc5c68736199a7511f7a14bcf5fde5045b5c",
+      "size_bytes": 4040
+    },
+    {
+      "path": "admin-deploy/job-profitability.css",
+      "sha256": "9b81637f951fd7fe15b208b23923787e8d307674b08a40cd9c02d9fb3ef25ec0",
+      "size_bytes": 7885
+    },
+    {
+      "path": "admin-deploy/job-profitability.js",
+      "sha256": "a6413381861afb0cadfa20c0d0d6c5029420124e2ceabf3329014fe45a30b09e",
+      "size_bytes": 25993
+    },
+    {
+      "path": "admin-deploy/rate-card-guard.js",
+      "sha256": "af8657b4807de1d7499b954c3078cc6cb830dbe842f2e6f463866fcf0eb2741c",
+      "size_bytes": 5884
+    },
+    {
+      "path": "admin-deploy/rate-card-publishing.css",
+      "sha256": "dee08a813ef99d3cc2f7b52210fe78d0019feeab605466e7d4d155241b6050c2",
+      "size_bytes": 3557
+    },
+    {
+      "path": "admin-deploy/rate-card-publishing.js",
+      "sha256": "c591f92d0a6446e3f4b69106add8cc6854e7ee1b1e7230838f0ffb51eef60640",
+      "size_bytes": 11167
+    },
+    {
+      "path": "admin-setup/002_scwork_cost_management.sql",
+      "sha256": "69925544364aaee727d5e902480cd6af17ba5b8802d6aa3906719ed6e31c29fe",
+      "size_bytes": 10993
+    },
+    {
+      "path": "admin-setup/003_scwork_job_profitability.sql",
+      "sha256": "f5d23fbe59b5869f74868b849ffd1d515dd021155818c1b8666a0de78d75cccb",
+      "size_bytes": 18545
+    },
+    {
+      "path": "admin-setup/004_scwork_rate_card_publishing.sql",
+      "sha256": "deebd889270f60dfefbf263b2ce0b436381fb9e67f2946756f830434e860cb8e",
+      "size_bytes": 23876
+    },
+    {
+      "path": "admin-setup/PHASE04_POST_FLIGHT_READ_ONLY.sql",
+      "sha256": "f5ee726270f60a3086082e3a486ac1dc2a715b51567496ea1b781347a007c7df",
+      "size_bytes": 2064
+    },
+    {
+      "path": "admin-setup/PHASE04_PRE_FLIGHT_READ_ONLY.sql",
+      "sha256": "83a7e6726cc17d15fc3c294fa75bed32c2bcb513b4d87025b2e60d69cedab4e2",
+      "size_bytes": 728
+    }
+  ]
+}
